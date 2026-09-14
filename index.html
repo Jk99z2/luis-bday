@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Feliz cumpleaños, Luis — corte final</title>
+<meta name="description" content="Un cumpleaños editado cuadro por cuadro.">
+<meta property="og:title" content="Feliz cumpleaños, Luis">
+<meta property="og:description" content="Corte final. Sin transiciones baratas.">
+<meta name="theme-color" content="#0b0c0f">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎬</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0c0f;
+  --panel:#121419;
+  --panel-2:#191c22;
+  --line:#272b33;
+  --ink:#eef1f5;
+  --muted:#868e9c;
+  --rec:#ff4438;
+  --tungsten:#ffb23f;   /* luz cálida  -> video */
+  --daylight:#3ad0c0;   /* luz fría    -> audio */
+  --mono:"JetBrains Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --disp:"Anton",Impact,"Arial Narrow",sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;background:var(--bg);color:var(--ink);
+  font-family:var(--mono);font-size:13px;overflow:hidden;
+  -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
+:focus-visible{outline:2px solid var(--tungsten);outline-offset:2px}
+
+/* ---------- grano de película ---------- */
+.grain{
+  position:fixed;inset:-60px;z-index:60;pointer-events:none;opacity:.05;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='180' height='180'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/></filter><rect width='180' height='180' filter='url(%23n)'/></svg>");
+  animation:grain 1.1s steps(5) infinite;
+}
+@keyframes grain{
+  0%{transform:translate(0,0)}20%{transform:translate(-12px,6px)}40%{transform:translate(8px,-10px)}
+  60%{transform:translate(-6px,-6px)}80%{transform:translate(10px,8px)}100%{transform:translate(0,0)}
+}
+
+/* ---------- claqueta ---------- */
+#slate{
+  position:fixed;inset:0;z-index:50;display:grid;place-items:center;padding:22px;
+  background:radial-gradient(120% 90% at 50% 35%,#1a1d23 0%,#0b0c0f 68%);
+  transition:opacity .5s ease,transform .5s ease;
+}
+#slate.gone{opacity:0;transform:scale(1.06);pointer-events:none}
+.board{width:min(540px,94vw)}
+.clap{position:relative;height:104px;margin-bottom:-2px}
+.stick{
+  position:absolute;left:0;right:0;height:40px;border:2px solid #05060a;border-radius:3px;
+  background:repeating-linear-gradient(74deg,#e8e6e1 0 26px,#15171c 26px 52px);
+  box-shadow:0 6px 18px rgba(0,0,0,.55);
+}
+.stick.base{bottom:0}
+.stick.top{bottom:40px;transform-origin:left bottom;transform:rotate(-23deg);transition:transform .17s cubic-bezier(.18,.85,.25,1.35)}
+.clapped .stick.top{transform:rotate(0)}
+.slate-body{background:#15171c;border:2px solid #05060a;border-radius:3px;padding:4px}
+.row{display:grid;grid-template-columns:84px 1fr;border-bottom:1px solid #262a31}
+.row:last-child{border-bottom:0}
+.row dt,.row dd{margin:0;padding:9px 10px;font-size:11.5px;letter-spacing:.06em}
+.row dt{color:#6f7683;border-right:1px solid #262a31}
+.row dd{color:#dfe3e9}
+.board footer{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:22px;flex-wrap:wrap}
+#action{
+  padding:13px 30px;border-radius:2px;background:var(--rec);color:#0b0c0f;
+  font-weight:700;letter-spacing:.14em;box-shadow:0 0 0 0 rgba(255,68,56,.45);
+  animation:pulse 2.4s ease-out infinite;
+}
+#action:hover{filter:brightness(1.08)}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(255,68,56,.4)}70%{box-shadow:0 0 0 16px rgba(255,68,56,0)}100%{box-shadow:0 0 0 0 rgba(255,68,56,0)}}
+.board footer p{margin:0;color:var(--muted);font-size:11px;max-width:24ch;line-height:1.5}
+#flash{position:fixed;inset:0;z-index:55;background:#fff;opacity:0;pointer-events:none}
+#flash.on{animation:flash .42s ease-out}
+@keyframes flash{0%{opacity:.92}100%{opacity:0}}
+
+/* ---------- editor ---------- */
+#nle{display:none;flex-direction:column;height:100dvh}
+#nle.on{display:flex}
+.topbar{
+  flex:0 0 auto;display:flex;align-items:center;gap:14px;height:38px;padding:0 12px;
+  background:var(--panel);border-bottom:1px solid var(--line);font-size:11px;color:var(--muted);
+}
+.topbar b{color:#cfd5de;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar nav{display:flex;gap:14px;margin-left:auto}
+.topbar .saved{color:var(--daylight)}
+
+.stage-wrap{flex:1 1 auto;min-height:0;display:flex;align-items:center;justify-content:center;padding:14px}
+.frame{
+  position:relative;width:100%;aspect-ratio:16/9;background:#06070a;overflow:hidden;
+  box-shadow:0 26px 70px rgba(0,0,0,.75),0 0 0 1px var(--line);
+}
+.vign{position:absolute;inset:0;pointer-events:none;background:radial-gradient(120% 100% at 50% 45%,transparent 45%,rgba(0,0,0,.62) 100%)}
+
+.scene{
+  position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:8% 9% 12%;text-align:center;
+}
+.slug{
+  display:inline-block;color:var(--tungsten);font-size:clamp(9px,1.4vw,12px);letter-spacing:.22em;
+  padding-bottom:5px;border-bottom:1px solid rgba(255,178,63,.35);
+  animation:rise .55s both;
+}
+.head{
+  font-family:var(--disp);font-weight:400;margin:0;line-height:.88;letter-spacing:.005em;
+  font-size:clamp(30px,8.4vw,92px);text-transform:uppercase;
+}
+.head span{display:block;animation:rise .7s both}
+.head span:nth-child(2){animation-delay:.09s}
+.head span:nth-child(3){animation-delay:.18s}
+.warm{color:var(--tungsten)}
+.sub{
+  margin:0;max-width:46ch;line-height:1.65;color:#d3d8e0;font-size:clamp(11px,1.55vw,15px);
+  animation:rise .7s .22s both;
+}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+.wishes{list-style:none;margin:4px 0 0;padding:0;display:grid;gap:7px;text-align:left}
+.wishes li{
+  display:flex;gap:10px;align-items:baseline;font-size:clamp(11px,1.5vw,14.5px);color:#d3d8e0;
+  animation:rise .5s both;animation-delay:calc(.3s + var(--i)*.14s);
+}
+.wishes li::before{content:"▸";color:var(--daylight);font-size:.85em}
+
+.credits{display:grid;gap:6px;width:min(430px,86%)}
+.crow{
+  display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;
+  font-size:clamp(10px,1.4vw,13px);animation:rise .5s both;animation-delay:calc(.25s + var(--i)*.12s);
+}
+.crow span:first-child{text-align:right;color:var(--muted)}
+.crow i{height:1px;background:var(--line);width:26px;font-style:normal}
+.crow span:last-child{text-align:left;color:#e4e8ee}
+.fin{margin-top:6px;letter-spacing:.4em;color:var(--muted);font-size:11px;animation:rise .6s 1.5s both}
+
+/* HUD del visor */
+.hud{position:absolute;inset:0;pointer-events:none;font-size:10.5px;letter-spacing:.1em;color:rgba(255,255,255,.72)}
+.hud .tl,.hud .tr,.hud .bl,.hud .br{position:absolute;display:flex;gap:12px;align-items:center}
+.hud .tl{top:12px;left:14px}.hud .tr{top:12px;right:14px}
+.hud .bl{bottom:12px;left:14px}.hud .br{bottom:12px;right:14px}
+.rec{display:flex;align-items:center;gap:7px;color:#fff}
+.rec i{width:8px;height:8px;border-radius:50%;background:var(--rec);animation:blink 1.15s steps(1) infinite}
+@keyframes blink{0%,55%{opacity:1}56%,100%{opacity:.15}}
+.corner{position:absolute;width:20px;height:20px;border:1.5px solid rgba(255,255,255,.3)}
+.c1{top:16px;left:16px;border-right:0;border-bottom:0}
+.c2{top:16px;right:16px;border-left:0;border-bottom:0}
+.c3{bottom:16px;left:16px;border-right:0;border-top:0}
+.c4{bottom:16px;right:16px;border-left:0;border-top:0}
+.leak{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:linear-gradient(104deg,transparent 30%,rgba(255,178,63,.5) 48%,rgba(255,68,56,.3) 58%,transparent 74%);
+  mix-blend-mode:screen;
+}
+.leak.sweep{animation:sweep 1.9s ease-out}
+@keyframes sweep{0%{opacity:0;transform:translateX(-45%)}35%{opacity:1}100%{opacity:0;transform:translateX(45%)}}
+#confetti{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+#confetti b{position:absolute;top:-8%;width:7px;height:11px;border-radius:1px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(115vh) rotate(720deg)}}
+
+/* transporte */
+.transport{
+  flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:var(--panel);border-top:1px solid var(--line);border-bottom:1px solid var(--line);
+}
+.transport button{
+  width:34px;height:30px;border-radius:2px;background:var(--panel-2);border:1px solid var(--line);
+  display:grid;place-items:center;font-size:11px;color:#c6ccd6;
+}
+.transport button:hover{background:#242832;color:#fff}
+#playBtn{width:44px;color:var(--tungsten)}
+.tc{font-variant-numeric:tabular-nums;letter-spacing:.07em;color:var(--tungsten);font-size:12.5px}
+.now{margin-left:auto;display:flex;gap:10px;align-items:center;color:var(--muted);font-size:11px;min-width:0}
+.now b{color:#cfd5de;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rate{color:var(--daylight)}
+
+/* línea de tiempo */
+.timeline{flex:0 0 auto;display:grid;grid-template-columns:46px 1fr;background:var(--panel);padding-bottom:env(safe-area-inset-bottom)}
+.labels,.body{display:grid;grid-template-rows:20px 46px 28px}
+.labels div{display:flex;align-items:center;padding-left:10px;font-size:10px;color:var(--muted);border-right:1px solid var(--line)}
+.body{position:relative;cursor:ew-resize;touch-action:none;user-select:none}
+.ruler{position:relative;border-bottom:1px solid var(--line);background:var(--panel-2)}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:#2f343d}
+.tick.maj{background:#434a55}
+.tick span{position:absolute;left:4px;top:4px;font-size:9px;color:#6d7480;letter-spacing:.05em}
+.lane{position:relative;border-bottom:1px solid var(--line);background:#0f1116}
+.clip{
+  position:absolute;top:4px;bottom:4px;border-radius:2px;overflow:hidden;
+  background:linear-gradient(180deg,rgba(255,178,63,.32),rgba(255,178,63,.14));
+  border:1px solid rgba(255,178,63,.5);
+  display:flex;align-items:center;padding:0 7px;font-size:10px;color:#ffd79a;white-space:nowrap;
+}
+.clip.active{background:linear-gradient(180deg,rgba(255,178,63,.6),rgba(255,178,63,.28));color:#241a05;border-color:var(--tungsten)}
+.lane.audio{background:#0d1215;border-bottom:0}
+.lane.audio svg{position:absolute;inset:0;width:100%;height:100%}
+.playhead{position:absolute;top:0;bottom:0;width:1px;background:var(--rec);pointer-events:none;z-index:3}
+.playhead::before{
+  content:"";position:absolute;top:0;left:-6px;width:13px;height:9px;background:var(--rec);
+  clip-path:polygon(0 0,100% 0,50% 100%);
+}
+.hint{
+  flex:0 0 auto;display:flex;gap:16px;align-items:center;padding:7px 12px;background:var(--bg);
+  border-top:1px solid var(--line);color:#5f6672;font-size:10px;letter-spacing:.05em;
+}
+kbd{background:var(--panel-2);border:1px solid var(--line);border-radius:2px;padding:1px 5px;color:#98a0ad}
+.hint .m{display:none}
+
+@media (max-width:720px){
+  .topbar nav,.topbar .saved{display:none}
+  .stage-wrap{padding:8px}
+  .transport{gap:6px;padding:7px 8px}
+  .transport button{width:30px}
+  .now b{display:none}
+  .labels,.body{grid-template-rows:18px 38px 22px}
+  .hint .d{display:none}.hint .m{display:block}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  .grain{display:none}
+}
+</style>
+</head>
+<body>
+
+<div class="grain" aria-hidden="true"></div>
+<div id="flash" aria-hidden="true"></div>
+
+<!-- ============ CLAQUETA ============ -->
+<section id="slate">
+  <div class="board" id="board">
+    <div class="clap"><div class="stick top"></div><div class="stick base"></div></div>
+    <dl class="slate-body">
+      <div class="row"><dt>PROD.</dt><dd id="fProd">EL CUMPLEAÑOS DE LUIS</dd></div>
+      <div class="row"><dt>ESCENA</dt><dd>01 — 07</dd></div>
+      <div class="row"><dt>TOMA</dt><dd>1 (la buena)</dd></div>
+      <div class="row"><dt>CÁMARA</dt><dd id="fCam">Hoy la traemos nosotros</dd></div>
+      <div class="row"><dt>FECHA</dt><dd id="fDate">—</dd></div>
+      <div class="row"><dt>FPS</dt><dd>24 — como debe ser</dd></div>
+    </dl>
+    <footer>
+      <button id="action" type="button">CLAQUETA Y ACCIÓN</button>
+      <p>Se reproduce solo. Después puedes arrastrar la línea de tiempo.</p>
+    </footer>
+  </div>
+</section>
+
+<!-- ============ EDITOR ============ -->
+<main id="nle">
+  <header class="topbar">
+    <b id="projName">luis_cumple_FINAL_final_v3_ESTAVEZSI.prproj</b>
+    <nav><span>Archivo</span><span>Editar</span><span>Clip</span><span>Secuencia</span><span>Ventana</span></nav>
+    <span class="saved">Guardado</span>
+  </header>
+
+  <div class="stage-wrap" id="stageWrap">
+    <div class="frame" id="frame">
+      <div class="scene" id="stage"></div>
+      <div class="leak" id="leak"></div>
+      <div id="confetti"></div>
+      <div class="vign"></div>
+      <div class="hud" aria-hidden="true">
+        <i class="corner c1"></i><i class="corner c2"></i><i class="corner c3"></i><i class="corner c4"></i>
+        <div class="tl"><span class="rec"><i></i>REC</span></div>
+        <div class="tr"><span id="tcBig">00:00:00:00</span></div>
+        <div class="bl"><span>4K</span><span>24p</span><span>ISO 800</span><span>f/1.8</span><span>1/50</span></div>
+        <div class="br"><span>TARJETA A</span><span>BATERÍA 100%</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="transport">
+    <button data-act="start" type="button" title="Inicio">⏮</button>
+    <button data-act="rev" type="button" title="Retroceder (J)">◀◀</button>
+    <button id="playBtn" data-act="play" type="button" title="Reproducir (espacio)">▶</button>
+    <button data-act="fwd" type="button" title="Avanzar (L)">▶▶</button>
+    <button data-act="end" type="button" title="Final">⏭</button>
+    <button data-act="replay" type="button" title="Verla otra vez">↻</button>
+    <span class="tc" id="tcSmall">00:00:00:00</span>
+    <span class="now"><b id="clipName">C001 · CLAQUETA</b><span class="rate" id="rateBadge">1×</span></span>
+  </div>
+
+  <section class="timeline">
+    <div class="labels"><div>TC</div><div>V1</div><div>A1</div></div>
+    <div class="body" id="tlBody">
+      <div class="ruler" id="ruler"></div>
+      <div class="lane" id="laneV"></div>
+      <div class="lane audio" id="laneA"></div>
+      <div class="playhead" id="playhead"></div>
+    </div>
+  </section>
+
+  <div class="hint">
+    <span class="d"><kbd>espacio</kbd> reproducir · <kbd>J</kbd><kbd>K</kbd><kbd>L</kbd> velocidad · <kbd>←</kbd><kbd>→</kbd> 1 s · arrastra la línea de tiempo</span>
+    <span class="m">Arrastra la línea de tiempo para moverte por el corte.</span>
+  </div>
+</main>
+
+<script>
+/* =========================================================
+   Cambia esto y la página sirve para cualquier otro cumpleaños
+   ========================================================= */
+const NOMBRE = "LUIS";
+
+const FPS = 24;
+
+const CLIPS = [
+  {
+    code:"C001", name:"CLAQUETA",  dur:5.5,
+    html:`
+      <span class="slug">ESC. 01 — INT. ESTUDIO — DÍA</span>
+      <h1 class="head"><span>Fade in</span></h1>
+      <p class="sub">Un videógrafo entra a cuadro. Por primera vez en mucho tiempo, la cámara no la trae él.</p>`
+  },
+  {
+    code:"C002", name:"PRIMER PLANO", dur:6.5,
+    html:`
+      <span class="slug">ESC. 02 — PRIMER PLANO</span>
+      <h1 class="head"><span class="warm">${NOMBRE}</span></h1>
+      <p class="sub">El que encuadra, el que espera la luz, el que aguanta la toma tres segundos más porque sabe que ahí está la buena.</p>`
+  },
+  {
+    code:"C003", name:"ROTULACIÓN", dur:6.5,
+    html:`
+      <span class="slug">ESC. 03 — ROTULACIÓN</span>
+      <h1 class="head"><span>Feliz</span><span class="warm">cumpleaños</span></h1>
+      <p class="sub">Sin transiciones baratas. Sin zoom digital. Solo esto, bien encuadrado y con la luz correcta.</p>`
+  },
+  {
+    code:"C004", name:"B-ROLL", dur:8,
+    html:`
+      <span class="slug">ESC. 04 — B-ROLL</span>
+      <h1 class="head"><span>Que nunca te falte</span></h1>
+      <ul class="wishes">
+        <li style="--i:0">Batería al 100 % cuando empieza lo bueno</li>
+        <li style="--i:1">Espacio en la tarjeta</li>
+        <li style="--i:2">Luz de las siete de la tarde</li>
+        <li style="--i:3">Audio limpio a la primera</li>
+        <li style="--i:4">Y una historia que valga la pena contar</li>
+      </ul>`
+  },
+  {
+    code:"C005", name:"HORA DORADA", dur:6.5,
+    html:`
+      <span class="slug">ESC. 05 — EXT. ATARDECER</span>
+      <h1 class="head"><span>Que la luz</span><span class="warm">siempre te favorezca</span></h1>
+      <p class="sub">Y que la vida te regale encuadres tan buenos como los que tú inventas.</p>`
+  },
+  {
+    code:"C006", name:"BRINDIS", dur:6.5,
+    html:`
+      <span class="slug">ESC. 06 — INT. NOCHE</span>
+      <h1 class="head"><span>Salud, maestro</span></h1>
+      <p class="sub">Por otro año en la línea de tiempo. Que venga lleno de buenas tomas y de gente que sepa apreciarlas.</p>`
+  },
+  {
+    code:"C007", name:"CRÉDITOS", dur:11,
+    final:true,
+    html:`
+      <h1 class="head"><span>Feliz cumpleaños,</span><span class="warm">${NOMBRE}</span></h1>
+      <div class="credits">
+        ${[
+          ["Dirección","La vida"],
+          ["Protagonista",NOMBRE.charAt(0)+NOMBRE.slice(1).toLowerCase()],
+          ["Fotografía","También él"],
+          ["Edición","Él, a las 3 de la mañana"],
+          ["Música","La que trae en la cabeza"],
+          ["Catering","El taco de después"]
+        ].map((r,i)=>`<div class="crow" style="--i:${i}"><span>${r[0]}</span><i></i><span>${r[1]}</span></div>`).join("")}
+      </div>
+      <div class="fin">F I N</div>`
+  }
+];
+
+const TOTAL = CLIPS.reduce((s,c)=>s+c.dur,0);
+const STARTS = []; CLIPS.reduce((a,c,i)=>{STARTS[i]=a; return a+c.dur;},0);
+
+/* ---------- elementos ---------- */
+const $ = id => document.getElementById(id);
+const stage=$("stage"), frame=$("frame"), wrap=$("stageWrap"), playhead=$("playhead");
+const tcBig=$("tcBig"), tcSmall=$("tcSmall"), clipName=$("clipName"), rateBadge=$("rateBadge"), playBtn=$("playBtn");
+const laneV=$("laneV"), laneA=$("laneA"), ruler=$("ruler"), tlBody=$("tlBody"), leak=$("leak"), confetti=$("confetti");
+
+let t=0, playing=false, rate=1, current=-1, scrubbing=false, lastTs=0, started=false;
+
+/* ---------- claqueta ---------- */
+$("fDate").textContent = new Date().toLocaleDateString("es-MX",{day:"2-digit",month:"long",year:"numeric"});
+$("fProd").textContent = "EL CUMPLEAÑOS DE " + NOMBRE;
+
+function snapSound(){
+  try{
+    const A = new (window.AudioContext||window.webkitAudioContext)();
+    const len = A.sampleRate*0.14, buf = A.createBuffer(1,len,A.sampleRate), d = buf.getChannelData(0);
+    for(let i=0;i<len;i++){ d[i] = (Math.random()*2-1) * Math.pow(1-i/len,9); }
+    const src = A.createBufferSource(); src.buffer = buf;
+    const f = A.createBiquadFilter(); f.type="highpass"; f.frequency.value=900;
+    const g = A.createGain(); g.gain.value=0.5;
+    src.connect(f); f.connect(g); g.connect(A.destination); src.start();
+  }catch(e){/* sin audio, sin drama */}
+}
+
+function clap(){
+  if(started) return; started = true;
+  $("board").classList.add("clapped");
+  snapSound();
+  setTimeout(()=>$("flash").classList.add("on"),140);
+  setTimeout(()=>{
+    $("slate").classList.add("gone");
+    $("nle").classList.add("on");
+    fitFrame();
+    buildTimeline();
+    setPlaying(true);
+  },520);
+  setTimeout(()=>$("slate").remove(),1100);
+}
+$("action").addEventListener("click",clap);
+
+/* ---------- marco 16:9 siempre correcto ---------- */
+function fitFrame(){
+  frame.style.maxWidth = Math.floor(wrap.clientHeight*16/9) + "px";
+}
+addEventListener("resize",fitFrame);
+
+/* ---------- línea de tiempo ---------- */
+function buildTimeline(){
+  // regla
+  let r="";
+  for(let s=0;s<=Math.floor(TOTAL);s+=1){
+    const maj = s%5===0;
+    r += `<div class="tick${maj?" maj":""}" style="left:${s/TOTAL*100}%">${maj?`<span>${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}</span>`:""}</div>`;
+  }
+  ruler.innerHTML = r;
+
+  // clips de video
+  laneV.innerHTML = CLIPS.map((c,i)=>
+    `<div class="clip" data-i="${i}" style="left:${STARTS[i]/TOTAL*100}%;width:${c.dur/TOTAL*100}%">${c.code} · ${c.name}</div>`
+  ).join("");
+
+  // onda de audio
+  let bars="", seed=7;
+  const rnd=()=>{ seed=(seed*16807)%2147483647; return seed/2147483647; };
+  for(let i=0;i<220;i++){
+    const h = 8 + rnd()*rnd()*86;
+    bars += `<rect x="${i*(1000/220)}" y="${(100-h)/2}" width="${1000/220*0.62}" height="${h}" fill="rgba(58,208,192,.45)"/>`;
+  }
+  laneA.innerHTML = `<svg viewBox="0 0 1000 100" preserveAspectRatio="none">${bars}</svg>`;
+}
+
+/* ---------- reproducción ---------- */
+const pad = (n,l=2)=>String(Math.floor(n)).padStart(l,"0");
+function timecode(sec){
+  const f = Math.floor((sec%1)*FPS);
+  return `${pad(sec/3600)}:${pad((sec/60)%60)}:${pad(sec%60)}:${pad(f)}`;
+}
+function clipAt(sec){
+  for(let i=CLIPS.length-1;i>=0;i--) if(sec>=STARTS[i]) return i;
+  return 0;
+}
+function setPlaying(v){
+  playing=v;
+  playBtn.textContent = v ? "❚❚" : "▶";
+  playBtn.title = v ? "Pausa (espacio)" : "Reproducir (espacio)";
+  if(!v){ rate=1; rateBadge.textContent="1×"; }
+}
+function shuttle(dir){
+  if(Math.sign(rate)!==dir || !playing) rate = dir;
+  else rate = Math.sign(rate)*Math.min(Math.abs(rate)*2,4);
+  playing = true; playBtn.textContent="❚❚";
+  rateBadge.textContent = (rate>0?"":"–") + Math.abs(rate) + "×";
+}
+function seek(v){ t = Math.max(0, Math.min(TOTAL-0.001, v)); paint(); }
+
+function renderClip(i){
+  const c = CLIPS[i];
+  stage.innerHTML = c.html;
+  clipName.textContent = `${c.code} · ${c.name}`;
+  laneV.querySelectorAll(".clip").forEach(el=>el.classList.toggle("active", +el.dataset.i===i));
+  leak.classList.remove("sweep"); void leak.offsetWidth; leak.classList.add("sweep");
+  confetti.innerHTML = "";
+  if(c.final) burst();
+}
+function burst(){
+  const colors=["#ffb23f","#3ad0c0","#ff4438","#eef1f5"];
+  let h="";
+  for(let i=0;i<44;i++){
+    h += `<b style="left:${Math.random()*100}%;background:${colors[i%4]};
+      animation-duration:${(2.6+Math.random()*2.4).toFixed(2)}s;
+      animation-delay:${(Math.random()*2.2).toFixed(2)}s;
+      opacity:${(.5+Math.random()*.5).toFixed(2)}"></b>`;
+  }
+  confetti.innerHTML = h;
+}
+
+function paint(){
+  const tc = timecode(t);
+  tcBig.textContent = tc; tcSmall.textContent = tc;
+  playhead.style.left = (t/TOTAL*100) + "%";
+  const i = clipAt(t);
+  if(i!==current){ current=i; renderClip(i); }
+}
+
+function loop(ts){
+  const dt = lastTs ? Math.min((ts-lastTs)/1000, .12) : 0;
+  lastTs = ts;
+  if(playing && !scrubbing){
+    t += dt*rate;
+    if(t>=TOTAL){ t=TOTAL-0.001; setPlaying(false); }
+    if(t<=0){ t=0; setPlaying(false); }
+  }
+  paint();
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+
+/* ---------- controles ---------- */
+document.querySelector(".transport").addEventListener("click", e=>{
+  const b = e.target.closest("button"); if(!b) return;
+  switch(b.dataset.act){
+    case "play": setPlaying(!playing); break;
+    case "start": seek(0); break;
+    case "end": seek(TOTAL-0.05); break;
+    case "fwd": shuttle(1); break;
+    case "rev": shuttle(-1); break;
+    case "replay": seek(0); setPlaying(true); break;
+  }
+});
+
+function scrub(x){
+  const r = tlBody.getBoundingClientRect();
+  seek((x-r.left)/r.width*TOTAL);
+}
+tlBody.addEventListener("pointerdown", e=>{
+  scrubbing=true; setPlaying(false); tlBody.setPointerCapture(e.pointerId); scrub(e.clientX);
+});
+tlBody.addEventListener("pointermove", e=>{ if(scrubbing) scrub(e.clientX); });
+["pointerup","pointercancel"].forEach(ev=>tlBody.addEventListener(ev,()=>{scrubbing=false;}));
+
+addEventListener("keydown", e=>{
+  if(!started){ if(e.code==="Space"||e.code==="Enter"){ e.preventDefault(); clap(); } return; }
+  switch(e.code){
+    case "Space": e.preventDefault(); setPlaying(!playing); break;
+    case "KeyL": shuttle(1); break;
+    case "KeyJ": shuttle(-1); break;
+    case "KeyK": setPlaying(false); break;
+    case "ArrowRight": e.preventDefault(); seek(t+1); break;
+    case "ArrowLeft": e.preventDefault(); seek(t-1); break;
+    case "Home": seek(0); break;
+    case "End": seek(TOTAL-0.05); break;
+  }
+});
+</script>
+</body>
+</html>
