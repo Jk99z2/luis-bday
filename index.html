@@ -165,6 +165,17 @@ button{font:inherit;color:inherit;background:none;border:0;cursor:pointer}
 #confetti b{position:absolute;top:-8%;width:7px;height:11px;border-radius:1px;animation:fall linear forwards}
 @keyframes fall{to{transform:translateY(115vh) rotate(720deg)}}
 
+/* mensaje completo */
+.note{
+  position:absolute;inset:0;z-index:6;display:none;overflow:auto;
+  background:rgba(6,7,10,.94);padding:min(8%,52px) min(9%,60px);
+}
+.note.on{display:block;animation:rise .3s both}
+.note p{margin:0 auto 16px;max-width:58ch;line-height:1.8;color:#dfe3e9;font-size:clamp(11.5px,1.5vw,14.5px)}
+.note p.sig{color:var(--tungsten);text-align:right}
+.note .close{position:absolute;top:10px;right:12px;color:var(--muted);font-size:10.5px;letter-spacing:.12em;padding:6px 10px;border:1px solid var(--line);border-radius:2px}
+.note .close:hover{color:#fff;border-color:#454d59}
+
 /* transporte */
 .transport{
   flex:0 0 auto;display:flex;align-items:center;gap:8px;padding:8px 12px;
@@ -312,52 +323,49 @@ const FPS = 24;
 
 const CLIPS = [
   {
-    code:"C001", name:"CLAQUETA",  dur:5.5,
+    code:"C001", name:"CLAQUETA",  dur:6,
     html:`
       <span class="slug">ESC. 01 — INT. ESTUDIO — DÍA</span>
-      <h1 class="head"><span>Fade in</span></h1>
-      <p class="sub">Un videógrafo entra a cuadro. Por primera vez en mucho tiempo, la cámara no la trae él.</p>`
+      <h1 class="head"><span>Papirrín</span></h1>
+      <p class="sub">Espero que te la pases chingón en tu cumple. O que te lo hayas pasado chido.</p>`
   },
   {
     code:"C002", name:"PRIMER PLANO", dur:6.5,
     html:`
       <span class="slug">ESC. 02 — PRIMER PLANO</span>
-      <h1 class="head"><span class="warm">${NOMBRE}</span></h1>
-      <p class="sub">El que encuadra, el que espera la luz, el que aguanta la toma tres segundos más porque sabe que ahí está la buena.</p>`
+      <h1 class="head"><span>Te aprecio</span><span class="warm">muchísimo</span></h1>
+      <p class="sub">Y la neta espero que sigas teniendo mucho jale.</p>`
   },
   {
-    code:"C003", name:"ROTULACIÓN", dur:6.5,
+    code:"C003", name:"ROTULACIÓN", dur:7,
     html:`
       <span class="slug">ESC. 03 — ROTULACIÓN</span>
-      <h1 class="head"><span>Feliz</span><span class="warm">cumpleaños</span></h1>
-      <p class="sub">Sin transiciones baratas. Sin zoom digital. Solo esto, bien encuadrado y con la luz correcta.</p>`
+      <h1 class="head"><span>El mejor videógrafo</span><span class="warm">de Colima</span></h1>
+      <p class="sub">Y posiblemente de México.</p>`
   },
   {
-    code:"C004", name:"B-ROLL", dur:8,
+    code:"C004", name:"CONTRAPICADA", dur:7,
     html:`
-      <span class="slug">ESC. 04 — B-ROLL</span>
-      <h1 class="head"><span>Que nunca te falte</span></h1>
+      <span class="slug">ESC. 04 — CONTRAPICADA</span>
+      <h1 class="head"><span>Tienes mucho futuro</span></h1>
+      <p class="sub">Sé que vas a ser grande, tanto en esto como de cantante, pai.</p>`
+  },
+  {
+    code:"C005", name:"B-ROLL", dur:9,
+    html:`
+      <span class="slug">ESC. 05 — B-ROLL</span>
+      <h1 class="head"><span>Que nunca te falte</span><span class="warm">pila en tu cámara</span></h1>
       <ul class="wishes">
-        <li style="--i:0">Batería al 100 % cuando empieza lo bueno</li>
-        <li style="--i:1">Espacio en la tarjeta</li>
-        <li style="--i:2">Luz de las siete de la tarde</li>
-        <li style="--i:3">Audio limpio a la primera</li>
-        <li style="--i:4">Y una historia que valga la pena contar</li>
+        <li style="--i:0">Que la luz siempre favorezca tus planos</li>
+        <li style="--i:1">Que las personas sepan valorar cada vez más tu trabajo</li>
       </ul>`
   },
   {
-    code:"C005", name:"HORA DORADA", dur:6.5,
-    html:`
-      <span class="slug">ESC. 05 — EXT. ATARDECER</span>
-      <h1 class="head"><span>Que la luz</span><span class="warm">siempre te favorezca</span></h1>
-      <p class="sub">Y que la vida te regale encuadres tan buenos como los que tú inventas.</p>`
-  },
-  {
-    code:"C006", name:"BRINDIS", dur:6.5,
+    code:"C006", name:"CIERRE", dur:6.5,
     html:`
       <span class="slug">ESC. 06 — INT. NOCHE</span>
-      <h1 class="head"><span>Salud, maestro</span></h1>
-      <p class="sub">Por otro año en la línea de tiempo. Que venga lleno de buenas tomas y de gente que sepa apreciarlas.</p>`
+      <h1 class="head"><span>Rífate siempre</span><span class="warm">en todo lo que hagas</span></h1>
+      <p class="sub">Te deseo lo mejor.</p>`
   },
   {
     code:"C007", name:"CRÉDITOS", dur:11,
@@ -366,12 +374,7 @@ const CLIPS = [
       <h1 class="head"><span>Feliz cumpleaños,</span><span class="warm">${NOMBRE}</span></h1>
       <div class="credits">
         ${[
-          ["Dirección","La vida"],
-          ["Protagonista",NOMBRE.charAt(0)+NOMBRE.slice(1).toLowerCase()],
-          ["Fotografía","También él"],
-          ["Edición","Él, a las 3 de la mañana"],
-          ["Música","La que trae en la cabeza"],
-          ["Catering","El taco de después"]
+          ["Atte.","Tu compita, el ingeniero de software"]
         ].map((r,i)=>`<div class="crow" style="--i:${i}"><span>${r[0]}</span><i></i><span>${r[1]}</span></div>`).join("")}
       </div>
       <div class="fin">F I N</div>`
